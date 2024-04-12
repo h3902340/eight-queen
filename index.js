@@ -7,7 +7,7 @@ let boardHeight = 8;
 let squareWidth = 50;
 let lineThickness = 1;
 let queenCount = 8;
-let populationCount = 100;
+let populationCount = 1000;
 let iterationLimit = 10000;
 let currentIteration = 0;
 let perfectEntityIndex = -1;
@@ -15,12 +15,6 @@ function generateEntity() {
     let queenSpot = [];
     for (let j = 0; j < boardWidth; j++) {
         queenSpot.push(j);
-    }
-    for (let j = boardWidth; j > 0; j--) {
-        let index = Math.floor(Math.random() * j);
-        let temp = queenSpot[index];
-        queenSpot[index] = queenSpot[j - 1];
-        queenSpot[j - 1] = temp;
     }
     return {
         queenSpot: queenSpot,
@@ -74,66 +68,85 @@ function getNonAttackingPairCount(queenSpot) {
     }
     return count;
 }
-for (let i = 0; i < populationCount; i++) {
-    population.push(generateEntity());
+function onInputPopulation(value) {
+    populationCount = Number(value);
+    if (populationCount < 1) {
+        populationCount = 1;
+    }
 }
-while (currentIteration < iterationLimit) {
-    let totalScore = 0;
-    for (let i = 0; i < population.length; i++) {
-        if (population[i].score == queenCount * (queenCount - 1) * .5) {
-            perfectEntityIndex = i;
-            break;
-        }
-        totalScore += population[i].score;
+function onInputGeneration(value) {
+    iterationLimit = Number(value);
+    if (iterationLimit < 1) {
+        iterationLimit = 1;
     }
-    if (perfectEntityIndex != -1) {
-        break;
+}
+function start() {
+    population = [];
+    for (let i = 0; i < populationCount; i++) {
+        population.push(generateEntity());
     }
-    // select an entity according to score
-    for (let i = 0; i < population.length; i++) {
-        let select = Math.floor(Math.random() * totalScore);
-        for (let j = 0; j < population.length; j++) {
-            if (select > population[j].score) {
-                select -= population[j].score;
-            }
-            else {
-                population[i] = population[j];
+    currentIteration = 0;
+    perfectEntityIndex = -1;
+    while (currentIteration < iterationLimit) {
+        let totalScore = 0;
+        for (let i = 0; i < population.length; i++) {
+            if (population[i].score == queenCount * (queenCount - 1) * .5) {
+                perfectEntityIndex = i;
                 break;
             }
+            totalScore += population[i].score;
         }
-    }
-    // mating
-    for (let i = 0; i < population.length; i += 2) {
-        let index = Math.floor(Math.random() * queenCount);
-        for (let j = 0; j < index; j++) {
-            for (let k = 0; k < boardHeight; k++) {
-                let temp = population[i].queenSpot[j];
-                population[i].queenSpot[j] = population[i + 1].queenSpot[j];
-                population[i + 1].queenSpot[j] = temp;
+        if (perfectEntityIndex != -1) {
+            break;
+        }
+        // select an entity according to score
+        for (let i = 0; i < population.length; i++) {
+            let select = Math.floor(Math.random() * totalScore);
+            for (let j = 0; j < population.length; j++) {
+                if (select > population[j].score) {
+                    select -= population[j].score;
+                }
+                else {
+                    population[i] = population[j];
+                    break;
+                }
             }
         }
-    }
-    // mutation
-    for (let i = 0; i < population.length; i++) {
-        let mutationIndex = Math.floor(Math.random() * boardWidth);
-        let mutationIndex2 = Math.floor(Math.random() * boardWidth);
-        let temp = population[i].queenSpot[mutationIndex];
-        population[i].queenSpot[mutationIndex] = population[i].queenSpot[mutationIndex2];
-        population[i].queenSpot[mutationIndex2] = temp;
-        population[i].score = getNonAttackingPairCount(population[i].queenSpot);
-    }
-    currentIteration++;
-}
-if (perfectEntityIndex != -1) {
-    drawBoard(population[perfectEntityIndex].queenSpot);
-    document.getElementById('result').innerHTML = `Population: ${population.length}, Iteration: ${currentIteration}`;
-}
-else {
-    let highest = 0;
-    for (let i = 0; i < population.length; i++) {
-        if (population[i].score > highest) {
-            highest = population[i].score;
+        // mating
+        for (let i = 0; i < population.length; i += 2) {
+            if (i + 1 == population.length)
+                break;
+            let index = Math.floor(Math.random() * queenCount);
+            for (let j = 0; j < index; j++) {
+                for (let k = 0; k < boardHeight; k++) {
+                    let temp = population[i].queenSpot[j];
+                    population[i].queenSpot[j] = population[i + 1].queenSpot[j];
+                    population[i + 1].queenSpot[j] = temp;
+                }
+            }
         }
+        // mutation
+        for (let i = 0; i < population.length; i++) {
+            let mutationIndex = Math.floor(Math.random() * boardWidth);
+            let mutationIndex2 = Math.floor(Math.random() * boardWidth);
+            let temp = population[i].queenSpot[mutationIndex];
+            population[i].queenSpot[mutationIndex] = population[i].queenSpot[mutationIndex2];
+            population[i].queenSpot[mutationIndex2] = temp;
+            population[i].score = getNonAttackingPairCount(population[i].queenSpot);
+        }
+        currentIteration++;
     }
-    alert('No perfect entity! highest: ' + highest);
+    if (perfectEntityIndex != -1) {
+        drawBoard(population[perfectEntityIndex].queenSpot);
+        document.getElementById('result').innerHTML = `Population: ${population.length}, Generation: ${currentIteration}`;
+    }
+    else {
+        let highest = 0;
+        for (let i = 0; i < population.length; i++) {
+            if (population[i].score > highest) {
+                highest = population[i].score;
+            }
+        }
+        alert('No perfect entity! highest: ' + highest);
+    }
 }

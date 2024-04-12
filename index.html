@@ -11,6 +11,15 @@
     <div id="wrapper">
         <p class="label">Evoluationary Algorithm</p>
         <Canvas id="mainCanvas"></Canvas>
+        <div style="margin-top: 5px;">
+            <label class="label">Population: </label><input class="input" id="population" type="number" value="1000"
+                oninput="onInputPopulation(this.value)">
+        </div>
+        <div style="margin-top: 5px;">
+            <label class="label">Generation: </label><input class="input" id="generation" type="number" value="10000"
+                oninput="onInputGeneration(this.value)">
+        </div>
+        <button style="margin-top: 5px;" class="button" onclick="start()">Start</button>
         <p class="label" id="result"></p>
     </div>
     <script src="index.js"></script>
